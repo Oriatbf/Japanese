@@ -3,119 +3,135 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.Rendering.PostProcessing;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
-    public GameObject[] Stages;
-    public bool GameStart;
-    public GameObject EndScreen;
-    public int curStage = 0;
-    public float timer = 0;
-    public TextMeshProUGUI timerText,stage,wrongTeacherName;
-    public AudioSource audio;
-    public TMP_InputField teacherName, stage6,stage7;
-    public bool audioStart = false;
+    void Awake() => instance = this;
+
+    public AudioSource audioSource;
+    public bool isGaming;
+
+    public Transform stage;
+    List<GameObject> stages = new List<GameObject>();
+
+    public TextMeshProUGUI timerText,stageText,wrongTeacherName;
+
+    PostProcessVolume volume;
+    Vignette vignette;
 
 
-    // Start is called before the first frame update
-    private void Awake()
-    {
-        instance = this;
-    }
+    public List<Image> disabledImage = new();
+    int curStage = 0;
+    float timer = 71, wrongTimer;
+    bool isDisabled = false;
+
     void Start()
     {
-        
+        stages = new List<GameObject>();
+        for (int i = 0; i < stage.childCount; i++)
+        {
+            stages.Add(stage.GetChild(i).gameObject);
+        }
+        stages[0].SetActive(true);
+
+        vignette = ScriptableObject.CreateInstance<Vignette>();
+        vignette.enabled.Override(true);
+        vignette.intensity.Override(1f);
+        volume = PostProcessManager.instance.QuickVolume(gameObject.layer, 100f, vignette);
     }
 
-    // Update is called once per frame
     void Update()
     {
-
-        if (GameStart)
+        if (isGaming)
         {
-            if (audioStart == false)
-            {
-                audioStart = true;
-                Audio();
-            }
-   
             timerText.text = "Timer : " + timer.ToString("F2");
-            if (timer < 71)
+            if (timer > 0)
             {
-                timer += Time.deltaTime;
+                timer -= Time.deltaTime;
             }
 
-            stage.text = "Stage : " + curStage.ToString();
+            stageText.text = "Stage : " + curStage.ToString();
         }
-        
-       
+
+        if (wrongTimer > 0)
+        {
+            vignette.intensity.value = wrongTimer / 2;
+            wrongTimer -= Time.deltaTime;
+            foreach (Image image in disabledImage)
+                image.fillAmount = 1 - wrongTimer;
+        }
+        else
+        {
+            vignette.intensity.value = 0;
+            if (isDisabled)
+            {
+                foreach (Image image in disabledImage)
+                    image.fillAmount = 1;
+                disabledImage.Clear();
+                isDisabled = false;
+            }
+        }
+    }
+
+    public void GameStart()
+    {
+        isGaming = true;
+        audioSource.Play();
     }
 
     public void NextStage()
     {
-        if(curStage == Stages.Length-1)
-        {
-            Debug.Log("ss");
-            GameEnd();
-        }
-        curStage++;
-        for (int i = 0; i < Stages.Length; i++)
-        {
-            if(i == curStage)
-            {
-                Stages[i].SetActive(true);
-            }
-            else
-            {
-                Stages[i].SetActive(false);
-            }
-        }
-        
+        if (wrongTimer > 0) return;
+        stages[curStage++].SetActive(false);
+        stages[curStage].SetActive(true);
     }
 
-    private void Audio()
+    public void WrongAnswer()
     {
-        audio.Play();
+        if (wrongTimer > 0) return;
+
+        wrongTimer = 1;
+        disabledImage.AddRange(FindObjectsOfType<Image>());
+        foreach(Image image in disabledImage)
+            image.fillAmount = 0;
+        isDisabled = true;
     }
 
-    public void TeacherName()
+    public void TeacherName(TMP_InputField inputField)
     {
-        if(teacherName.text == "윤지은선생님" || teacherName.text == "윤지은쌤" || teacherName.text == "지은선생님" || teacherName.text == "지은쌤")
-        {
+        List<string> answer = new List<string>(){ "윤지은 선생님", "윤지은썜", "지은선생님" , "지은쌤", "윤지은 선생님", "윤지은 쌤", "지은 선생님", "지은 쌤" };
+        List<string> noTeacher = new List<string>() { "윤지은", "지은" };
+
+        if (answer.Contains(inputField.text))
             NextStage();
-        }
-        else if (teacherName.text == "윤지은" || teacherName.text == "지은")
-        {
+        else if (noTeacher.Contains(inputField.text))
             wrongTeacherName.text = "'선생님'을 붙히지 않는 교권 추락의 현장";
-        }
         else
-        {
             wrongTeacherName.text = "선생님 성함을 몰라?";
-        }
-       
     }
 
-    public void Stage6()
+    public void Stage6(TMP_InputField inputField)
     {
-        if (stage6.text == "아" || stage6.text == "ㅏ")
+        List<string> answer = new List<string>() { "아", "ㅏ" };
+        if (answer.Contains(inputField.text))
         {
             NextStage();
         }
     }
-    public void Stage7()
+    public void Stage7(TMP_InputField inputField)
     {
-        if (stage7.text == "시치고산")
+        if (inputField.text == "시치고산")
         {
             NextStage();
         }
     }
-
-
-    public void GameEnd()
+    public void Stage8(TMP_InputField inputField)
     {
-        GameStart = false;
-        EndScreen.SetActive(true);
-        
+        if (inputField.text == "크다")
+        {
+            NextStage();
+        }
     }
 }
