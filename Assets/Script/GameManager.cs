@@ -134,4 +134,63 @@ public class GameManager : MonoBehaviour
             NextStage();
         }
     }
+
+    public void Stage13(TMP_InputField inputField)
+    {
+        if(inputField.text == "생일")
+        {
+            NextStage();
+        }
+    }
+
+    public void Stage15(TMP_InputField inputField)
+    {
+        if (inputField.text == "콜라")
+        {
+            NextStage();
+        }
+    }
+
+    public void Stage17(TMP_InputField inputField)
+    {
+        List<string> answer = new List<string>() { "모두", "모두가" };
+        if (answer.Contains(inputField.text))
+        {
+            NextStage();
+        }
+    }
+
+    public void Stage20(TMP_InputField inputField)
+    {
+        List<string> answer = new List<string>() { "2일", "2" };
+        if (answer.Contains(inputField.text))
+        {
+            NextStage();
+        }
+    }
+
+    public void Stage21(TMP_InputField inputField)
+    {
+        List<string> answer = new List<string>() { "4", "4번" };
+        if (answer.Contains(inputField.text))
+        {
+            NextStage();
+        }
+    }
+    public void Stage22(TMP_InputField inputField)
+    {
+        List<string> answer = new List<string>() { "도쿄", "도쿄도" };
+        if (answer.Contains(inputField.text))
+        {
+            NextStage();
+        }
+    }
+
+    public void Stage23(TMP_InputField inputField)
+    {
+        if (inputField.text == "타나바타")
+        {
+            NextStage();
+        }
+    }
 }
