@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -15,12 +16,12 @@ public class GameManager : MonoBehaviour
 
     public Transform stage;
     List<GameObject> stages = new List<GameObject>();
+    public GameObject timeover;
 
     public TextMeshProUGUI timerText,stageText,wrongTeacherName;
 
     PostProcessVolume volume;
     Vignette vignette;
-
 
     public List<Image> disabledImage = new();
     int curStage = 0;
@@ -48,8 +49,11 @@ public class GameManager : MonoBehaviour
         {
             timerText.text = "Timer : " + timer.ToString("F2");
             if (timer > 0)
-            {
                 timer -= Time.deltaTime;
+            else if(isGaming)
+            {
+                isGaming = false;
+                timeover.SetActive(true);
             }
 
             stageText.text = "Stage : " + curStage.ToString();
@@ -73,6 +77,9 @@ public class GameManager : MonoBehaviour
                 isDisabled = false;
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.F1))
+            SceneManager.LoadScene(0);
     }
 
     public void GameStart()
@@ -86,6 +93,9 @@ public class GameManager : MonoBehaviour
         if (wrongTimer > 0) return;
         stages[curStage++].SetActive(false);
         stages[curStage].SetActive(true);
+
+        if(curStage == stages.Count - 1)
+            isGaming = false;
     }
 
     public void WrongAnswer()
